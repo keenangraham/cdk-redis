@@ -1,9 +1,19 @@
-from aws_cdk import App, CfnOutput, Environment, Stack
-from aws_cdk.aws_ec2 import (
-    SubnetSelection, SubnetType, Vpc, SecurityGroup, Peer, Port,
-    Instance, InstanceType, MachineImage, BastionHostLinux
-)
-from aws_cdk.aws_elasticache import CfnCacheCluster, CfnSubnetGroup
+from aws_cdk import App
+from aws_cdk import CfnOutput
+from aws_cdk import Environment
+from aws_cdk import Stack
+
+from aws_cdk.aws_ec2 import SubnetSelection
+from aws_cdk.aws_ec2 import SubnetType
+from aws_cdk.aws_ec2 import Vpc
+from aws_cdk.aws_ec2 import SecurityGroup
+from aws_cdk.aws_ec2 import Peer
+from aws_cdk.aws_ec2 import Port
+from aws_cdk.aws_ec2 import BastionHostLinux
+
+from aws_cdk.aws_elasticache import CfnCacheCluster
+from aws_cdk.aws_elasticache import CfnSubnetGroup
+
 from constructs import Construct
 
 
@@ -27,7 +37,6 @@ class RedisStack(Stack):
             vpc_id='vpc-ea3b6581'
         )
 
-        # Create a security group for Redis
         redis_sg = SecurityGroup(
             self,
             'RedisSG',
@@ -36,7 +45,6 @@ class RedisStack(Stack):
             allow_all_outbound=False
         )
 
-        # Create a security group for the bastion host
         bastion_sg = SecurityGroup(
             self,
             'BastionSG',
@@ -45,21 +53,18 @@ class RedisStack(Stack):
             allow_all_outbound=True
         )
 
-        # Allow SSH access to the bastion host
         bastion_sg.add_ingress_rule(
             peer=Peer.any_ipv4(),
             connection=Port.tcp(22),
             description='Allow SSH access'
         )
 
-        # Allow Redis access from the bastion host
         redis_sg.add_ingress_rule(
             peer=bastion_sg,
             connection=Port.tcp(6379),
             description='Allow Redis access from Bastion'
         )
 
-        # Create a subnet group using public subnets
         subnet_group = CfnSubnetGroup(
             self,
             'RedisSubnetGroup',
@@ -78,7 +83,6 @@ class RedisStack(Stack):
             vpc_security_group_ids=[redis_sg.security_group_id]
         )
 
-        # Create a bastion host
         bastion_host = BastionHostLinux(
             self,
             'BastionHost',
@@ -88,7 +92,6 @@ class RedisStack(Stack):
             instance_name='Redis-Bastion',
         )
 
-        # Output the Redis endpoint
         CfnOutput(
             self,
             'RedisEndpoint',
@@ -103,7 +106,6 @@ class RedisStack(Stack):
             description='Redis Cluster Endpoint Port'
         )
 
-        # Output the bastion host's public IP and public DNS name
         CfnOutput(
             self,
             'BastionPublicIP',

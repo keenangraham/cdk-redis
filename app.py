@@ -14,6 +14,9 @@ from aws_cdk.aws_ec2 import BastionHostLinux
 from aws_cdk.aws_elasticache import CfnCacheCluster
 from aws_cdk.aws_elasticache import CfnSubnetGroup
 
+from aws_cdk.aws_cloudwatch import Metric
+from aws_cdk.aws_cloudwatch import Stats
+
 from constructs import Construct
 
 
@@ -91,6 +94,24 @@ class RedisStack(Stack):
             security_group=bastion_sg,
             instance_name='Redis-Bastion',
         )
+
+        redis_engine_cpu_metric = Metric(
+            metric_name='EngineCPUUtilization',
+            namespace='AWS/ElastiCache',
+            statistic=Stats.MAXIMUM,
+            dimensions_map={
+                'CacheClusterId': cache_cluster.ref,
+            },
+        )
+
+        redis_engine_cpu_metric.create_alarm(
+            self,
+            'RedisEngineCpuAlarm',
+            evaluation_periods=1,
+            threshold=90,
+        )
+
+        redis_engine_cpu_metric.attach_to(self)
 
         CfnOutput(
             self,

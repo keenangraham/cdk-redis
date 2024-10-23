@@ -113,6 +113,42 @@ class RedisStack(Stack):
 
         redis_engine_cpu_metric.attach_to(self)
 
+        redis_cpu_metric = Metric(
+            metric_name='CPUUtilization',
+            namespace='AWS/ElastiCache',
+            statistic=Stats.MAXIMUM,
+            dimensions_map={
+                'CacheClusterId': cache_cluster.ref,
+            },
+        )
+
+        redis_cpu_metric.create_alarm(
+            self,
+            'RedisCpuAlarm',
+            evaluation_periods=1,
+            threshold=90,
+        )
+
+        redis_cpu_metric.attach_to(self)
+
+        redis_used_memory_metric = Metric(
+            metric_name='DatabaseMemoryUsagePercentage',
+            namespace='AWS/ElastiCache',
+            statistic=Stats.MAXIMUM,
+            dimensions_map={
+                'CacheClusterId': cache_cluster.ref,
+            },
+        )
+
+        redis_used_memory_metric.create_alarm(
+            self,
+            'RedisUsedMemeoryAlarm',
+            evaluation_periods=1,
+            threshold=90,
+        )
+
+        redis_used_memory_metric.attach_to(self)
+
         CfnOutput(
             self,
             'RedisEndpoint',
